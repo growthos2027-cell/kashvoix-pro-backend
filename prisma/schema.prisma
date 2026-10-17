@@ -1,1 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  phone        String        @unique
+  pinCode      String
+  language     String        @default("fr")
+  tier         String        @default("FREE")
+  createdAt    BigInt
+  updatedAt    BigInt
+  deletedAt    BigInt?
+  transactions Transaction[]
+}
+
+model Category {
+  id           String        @id @default(uuid())
+  userId       String
+  name         String
+  type         String        // INCOME ou EXPENSE
+  createdAt    BigInt
+  updatedAt    BigInt
+  deletedAt    BigInt?
+  transactions Transaction[]
+}
+
+model Transaction {
+  id            String   @id @default(uuid())
+  userId        String
+  categoryId    String
+  amount        Float
+  type          String   // INCOME ou EXPENSE
+  date          BigInt
+  note          String?
+  entrySource   String
+  rawVoiceText  String?
+  updatedAt     BigInt
+  deletedAt     BigInt?
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([userId, updatedAt])
+}
 
