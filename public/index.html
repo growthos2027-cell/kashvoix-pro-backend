@@ -1,25 +1,143 @@
-GrowthOS
-KashVoix Pro
-Gestion financière et comptabilité vocale — espace de contrôle
 
-Vérification du serveur…
-Serveur API
-Vérification…
-Disponibilité du service web
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <title>GrowthOS KashVoix Pro</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px 16px;
+      background: linear-gradient(145deg, #0b1220, #172b45);
+      color: #f2f6ff;
+      font-family: system-ui, sans-serif;
+    }
+    main { max-width: 900px; margin: auto; }
+    .brand { color: #7dd3fc; font-weight: 800; letter-spacing: 2px; }
+    h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.15; }
+    .muted { color: #a9b8ce; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+    }
+    .card {
+      padding: 20px;
+      border: 1px solid #30415b;
+      border-radius: 16px;
+      background: #121d30;
+      margin-bottom: 14px;
+    }
+    .value { font-size: 21px; font-weight: 700; margin-top: 8px; }
+    button, a {
+      display: inline-block;
+      margin: 8px 8px 0 0;
+      padding: 11px 15px;
+      border: 1px solid #46617f;
+      border-radius: 10px;
+      background: #1b3553;
+      color: white;
+      font: inherit;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      margin-right: 8px;
+      border-radius: 50%;
+      background: #fbbf24;
+    }
+    .ok { background: #4ade80; }
+    .error { background: #fb7185; }
+    #diagnostic { overflow-wrap: anywhere; }
+    footer { margin-top: 22px; font-size: 13px; color: #8294ad; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="brand">GROWTHOS · KASHVOIX PRO</div>
+  <h1>Gestion financière<br>et comptabilité vocale</h1>
+  <p class="muted">Espace de contrôle du service</p>
 
-Base de données
-Non vérifiée
-État communiqué par le serveur
+  <section class="grid">
+    <article class="card">
+      <div class="muted">Serveur API</div>
+      <div class="value"><span id="dot" class="dot"></span><span id="api">Vérification…</span></div>
+      <p class="muted">Disponibilité du service</p>
+    </article>
+    <article class="card">
+      <div class="muted">Base de données</div>
+      <div class="value" id="database">Non vérifiée</div>
+      <p class="muted">Connexion PostgreSQL</p>
+    </article>
+    <article class="card">
+      <div class="muted">Interface</div>
+      <div class="value"><span class="dot ok"></span>Chargée</div>
+      <p class="muted">Page web servie par le backend</p>
+    </article>
+  </section>
 
-Interface
-Chargée
-La page web est servie par le backend
+  <section class="card">
+    <h2>Diagnostic rapide</h2>
+    <p id="diagnostic" class="muted">Connexion au serveur en cours.</p>
+    <button id="refresh">Vérifier à nouveau</button>
+    <a href="/api/status">Statut API</a>
+    <a href="/api">Ouvrir l’API</a>
+  </section>
 
-Diagnostic rapide
-Connexion au point de contrôle en cours.
+  <p class="muted">
+    Cette interface est un diagnostic initial. Elle ne gère pas encore
+    les comptes, les transactions ni les abonnements.
+  </p>
+  <footer>GrowthOS KashVoix Pro · Version de diagnostic</footer>
+</main>
 
-Vérifier à nouveau
-Ouvrir le statut API
-Ouvrir l'API
-Important : cette première interface vérifie uniquement le service. Elle ne prétend pas encore gérer les comptes, les transactions ou les abonnements. Ces fonctions devront être reliées à l'authentification et à la base de données avant une utilisation réelle.
-GrowthOS KashVoix Pro · Interface de diagnostic initiale
+<script>
+async function checkStatus() {
+  const api = document.getElementById('api');
+  const dot = document.getElementById('dot');
+  const database = document.getElementById('database');
+  const diagnostic = document.getElementById('diagnostic');
+
+  api.textContent = 'Vérification…';
+  dot.className = 'dot';
+
+  try {
+    const response = await fetch('/api/status', { cache: 'no-store' });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error('Erreur HTTP ' + response.status);
+    }
+
+    api.textContent = 'Opérationnel';
+    dot.className = 'dot ok';
+
+    database.textContent =
+      data.database === 'connected' ? 'Connectée' :
+      data.database === 'error' ? 'Erreur de connexion' :
+      'Non vérifiée';
+
+    diagnostic.textContent =
+      'Serveur joignable. Dernière vérification : ' +
+      new Date().toLocaleString('fr-FR') + '.';
+  } catch (error) {
+    api.textContent = 'Indisponible';
+    dot.className = 'dot error';
+    database.textContent = 'Non vérifiée';
+    diagnostic.textContent =
+      'La vérification a échoué : ' + error.message;
+  }
+}
+
+document.getElementById('refresh').addEventListener('click', checkStatus);
+checkStatus();
+</script>
+</body>
+</html>
